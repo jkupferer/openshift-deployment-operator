@@ -8,11 +8,16 @@ metadata:
 
 parameters:
   - name: NAME
+    required: true
     value: openshift-deployment-operator
   - name: IMAGE
+    required: true
     value: quay.io/jkupferer/openshift-deployment-operator:latest
   - name: IMAGE_PULL_POLICY
+    required: true
     value: Always
+  - name: DEPLOYMENT_NAMESPACES
+    required: false
 
 objects:
   - apiVersion: v1
@@ -94,6 +99,9 @@ objects:
         spec:
           containers:
             - name: operator
+              env:
+                - name: DEPLOYMENT_NAMESPACES
+                  value: DEPLOYMENT_NAMESPACES
               image: ${IMAGE}
               imagePullPolicy: ${IMAGE_PULL_POLICY}
               livenessProbe:

@@ -5,7 +5,32 @@ This bridges the image trigger functionality from DeploymentConfig to k8s Deploy
 
 == Deploying
 
+To deploy the OpenShift Deployment Operator if your deployments and image streams are in the same namespace:
+
+------------------------------------------------------------
+oc process --local -f deploy-template.yaml | oc apply -f -
+------------------------------------------------------------
+
+If your deployments are in separate namespaces, then specify the namespaces with the `DEPLOYMENT_NAMESPACES` parameter:
+
+------------------------------------------------------------
+oc process --local -f deploy-template.yaml \
+  -p DEPLOYMENT_NAMESPACES="myapp-dev,myapp-stage,myapp-prod" \
+| oc apply -f -
+------------------------------------------------------------
+
 == Configuring Deployments
+
+Deployments need to be labeled to indicate the image stream and image stream tag used by containers.
+
+If the deployment is in the same namespace as the image stream then the label can be set with `imagestreams.image.openshift.io/<IMAGESTREAM>` and a value of the tag. For example, if the imagestream is named "example-app" and the tag used is "latest":
+
+--------------------------------------------------------------------------------
+oc label deployment/example-app imagestreams.image.openshift.io/example-app=latest
+--------------------------------------------------------------------------------
+
+The operator will search for containers that are already configured to use the image stream and update those.
+If the deployment has not used the imagestream before, then the image can be set to match the label, "imagestreams.image.openshift.io/example-app".
 
 == Building
 
