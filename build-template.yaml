@@ -1,0 +1,48 @@
+---
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  annotations:
+    description: Build resources for the openshift-deployment-operator
+  name: openshift-deployment-operator-build
+
+parameters:
+- name: FROM_IMAGE
+  value: registry.access.redhat.com/ubi8:latest
+- name: GIT_REPO
+  value: https://github.com/jkupferer/openshift-deployment-operator.git
+- name: NAME
+  value: openshift-deployment-operator
+
+objects:
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
+  metadata:
+    name: ${NAME}
+  spec:
+    lookupPolicy:
+      local: false
+
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    name: ${NAME}
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: ${NAME}:latest
+    postCommit: {}
+    resources: {}
+    runPolicy: Serial
+    source:
+      git:
+        uri: ${GIT_REPO}
+        ref: master
+    strategy:
+      type: Docker
+      dockerStrategy:
+        from:
+          kind: DockerImage
+          name: ${FROM_IMAGE}
+    triggers: []

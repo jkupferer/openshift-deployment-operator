@@ -1,0 +1,32 @@
+= OpenShift Deployment Operator
+
+The OpenShift deployment operator is a python https://kopf.readthedocs.io/en/latest/[kopf] based operator that watches OpenShift image streams and updates deployments when the image stream is updated.
+This bridges the image trigger functionality from DeploymentConfig to k8s Deployments.
+
+== Deploying
+
+== Configuring Deployments
+
+== Building
+
+. Create events console build configuration
++
+------------------------------------------------------------
+oc process --local -f build-template.yaml | oc apply -f -
+------------------------------------------------------------
+ 
+. Build events operator image
++
+------------------------------------------------------------
+oc start-build openshift-deployment-operator --from-dir=. -F
+------------------------------------------------------------
+
+. Deploy operator from build image.
++
+--------------------------------------------------------------------------------
+OPERATOR_IMAGE=$(oc get imagestream openshift-deployment-operator -o jsonpath='{.status.tags[?(@.tag=="latest")].items[0].dockerImageReference}')
+oc process --local -f deploy-template.yaml \
+  -p IMAGE="${OPERATOR_IMAGE}" \
+  -p IMAGE_PULL_POLICY="IfNotPresent" \
+| oc apply -f -
+--------------------------------------------------------------------------------

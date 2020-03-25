@@ -1,0 +1,115 @@
+---
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  annotations:
+    description: OpenShift Deployment Operator
+  name: openshift-deployment-operator
+
+parameters:
+  - name: NAME
+    value: openshift-deployment-operator
+  - name: IMAGE
+    value: quay.io/jkupferer/openshift-deployment-operator:latest
+  - name: IMAGE_PULL_POLICY
+    value: Always
+
+objects:
+  - apiVersion: v1
+    kind: ServiceAccount
+    metadata:
+      name: ${NAME}
+
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: ${NAME}
+    rules:
+      - apiGroups:
+          - image.openshift.io
+        resources:
+          - imagestreams
+        verbs:
+          - get
+          - list
+          - watch
+      - apiGroups:
+          - apps
+        resources:
+          - daemonsets
+          - deployments
+          - statefulsets
+        verbs:
+          - get
+          - list
+          - patch
+          - update
+          - watch
+      - apiGroups:
+          - apps.openshift.io
+        resources:
+          - deploymentconfigs
+        verbs:
+          - get
+          - list
+          - patch
+          - update
+          - watch
+      - apiGroups:
+          - ""
+        resources:
+          - events
+        verbs:
+          - create
+
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: ${NAME}
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: ${NAME}
+    subjects:
+      - kind: ServiceAccount
+        name: ${NAME}
+
+  - apiVersion: extensions/v1beta1
+    kind: Deployment
+    metadata:
+      labels:
+        name: ${NAME}
+      name: ${NAME}
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          name: ${NAME}
+      strategy:
+        type: Recreate
+      template:
+        metadata:
+          labels:
+            name: ${NAME}
+        spec:
+          containers:
+            - name: operator
+              image: ${IMAGE}
+              imagePullPolicy: ${IMAGE_PULL_POLICY}
+              livenessProbe:
+                initialDelaySeconds: 30
+                tcpSocket:
+                  port: 8080
+                timeoutSeconds: 1
+              ports:
+                - containerPort: 8080
+                  protocol: TCP
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 512Mi
+                limits:
+                  cpu: 500m
+                  memory: 512Mi
+          restartPolicy: Always
+          serviceAccountName: ${NAME}
