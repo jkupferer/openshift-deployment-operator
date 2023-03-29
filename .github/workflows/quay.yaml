@@ -16,7 +16,7 @@ jobs:
       id: get_version
       run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
     - name: Publish My Image to Quay
-      uses: elgohr/Publish-Docker-Github-Action@master
+      uses: elgohr/Publish-Docker-Github-Action@v5
       with:
         name: jkupferer/openshift-deployment-operator
         username: ${{ secrets.QUAY_USERNAME }}
